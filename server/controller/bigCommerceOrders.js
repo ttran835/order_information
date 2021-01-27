@@ -16,7 +16,7 @@ const optionsHeader = {
 
 /**
  * Requests to BigCommerce API can only be made via server
- * You cannot make requests on client side. 
+ * You cannot make requests on client side.
  * Adjust controllers based on what you need.
  */
 
@@ -26,7 +26,7 @@ const bigCommerceOrders = {
    */
   getOrders: async (req, res) => {
     try {
-      const data = await Axios.get(`${bcUrlV2}/orders`, optionsHeader);
+      const { data } = await Axios.get(`${bcUrlV2}/orders`, optionsHeader);
       if (data.length < 1) return res.sendStatus(400);
       res.status(200).send(data);
     } catch (err) {
@@ -39,8 +39,8 @@ const bigCommerceOrders = {
    */
   getOrderProducts: async (req, res) => {
     try {
-      const { orderId } = req.query;
-      const data = await Axios.get(`${bcUrlV2}/orders/${orderId}/products`, optionsHeader);
+      const { orderId } = req.params;
+      const { data } = await Axios.get(`${bcUrlV2}/orders/${orderId}/products`, optionsHeader);
       if (data.length < 1) return res.sendStatus(400);
       res.status(200).send(data);
     } catch (err) {
