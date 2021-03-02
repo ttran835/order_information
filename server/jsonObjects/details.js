@@ -38,4 +38,4 @@ const details = (orderProduct, date_created, date_shipped) => {
   };
 };
 
-module.exports = { details };
+module.exports = details;

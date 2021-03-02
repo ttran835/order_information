@@ -41,4 +41,4 @@ const headers = (order) => {
   };
 };
 
-module.exports = { headers };
+module.exports = headers;

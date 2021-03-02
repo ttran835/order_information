@@ -3,6 +3,8 @@ const chalk = require('chalk');
 const Axios = require('axios');
 const { parseAsync } = require('json2csv');
 
+const { headers, details } = require('../jsonObjects');
+
 const bcUrlV2 = process.env.BC_API_PATH_V2;
 const bcUrlV3 = process.env.BC_API_PATH_V3;
 
@@ -31,7 +33,7 @@ const getAllOrdersFunc = async (page) => {
 const getOrderProductsFunc = async (orderId) => {
   try {
     const { data } = await Axios.get(
-      `${bcUrlV2}/orders/${orderId}/products?sort=date_created:desc`,
+      `${bcUrlV2}/orders/${orderId}/products`,
       optionsHeader,
     );
     return data;
