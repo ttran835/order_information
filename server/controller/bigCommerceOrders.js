@@ -5,6 +5,8 @@ const { parseAsync } = require('json2csv');
 
 const { headers, details } = require('../jsonObjects');
 
+const { FREQUENCY, CSV_TYPE } = require('../../shared/fetchConstants');
+
 const bcUrlV2 = process.env.BC_API_PATH_V2;
 const bcUrlV3 = process.env.BC_API_PATH_V3;
 
@@ -96,7 +98,10 @@ const bigCommerceOrders = {
 
   getCsvs: async (req, res) => {
     try {
+      const { csvType, frequency, year } = req.params;
 
+      // First get all orders for frequency and year since both headers and details
+      // rely on it
     } catch(error) {
 
     }
