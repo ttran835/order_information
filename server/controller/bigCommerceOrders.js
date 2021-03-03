@@ -189,12 +189,13 @@ const bigCommerceOrders = {
           new Date(year, month, getLastDayOfMonth(year, month), 23, 59, 59),
         );
       }
-      debugger;
+      // debugger;
       // Get all orders for timePeriod and year since both headers and details
       // rely on it
       const allOrders = [];
       let nextPageValid = true;
       let page = 1;
+      console.time("getAllOrders")
       while (nextPageValid) {
         // eslint-disable-next-line no-await-in-loop
         const results = await getAllOrdersFunc(page, minDate, maxDate);
@@ -205,12 +206,13 @@ const bigCommerceOrders = {
           nextPageValid = false;
         }
       }
+      console.timeEnd("getAllOrders")
 
       if (csvType === CSV_TYPE.HEADERS) {
         // Format if headers csv requested
         const formattedJsonFormat = allOrders.map((order) => headers(order));
         const csv = await parseAsync(formattedJsonFormat);
-        debugger;
+        // debugger;
       }
     } catch (error) {
       console.log(error);
