@@ -22,7 +22,7 @@ const TIME_PERIOD = {
 };
 
 const CSV_TYPE = {
-  HEADERS: 'header',
+  HEADERS: 'headers',
   DETAILS: 'details',
 };
 

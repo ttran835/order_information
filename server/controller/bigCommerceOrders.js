@@ -61,6 +61,9 @@ const getOrdersCountFunc = async () => {
 
 const getLastDayOfMonth = (y, m) => new Date(y, m + 1, 0).getDate();
 
+const getDateWithZeroUTCOffest = (date) =>
+  new Date(date.getTime() - date.getTimezoneOffset() * 60000).toISOString();
+
 /**
  * Requests to BigCommerce API can only be made via server
  * You cannot make requests on client side.
@@ -75,11 +78,12 @@ const bigCommerceOrders = {
     try {
       const { page } = req.query;
       const data = await getAllOrdersFunc(page || 1);
+      if (!data) res.sendStatus(400);
       console.log(data.length);
       res.status(200).send(data);
     } catch (error) {
       res.sendStatus(400);
-      console.log(chalk.redBg(JSON.stringify(error)));
+      console.log(error);
     }
   },
 
@@ -90,10 +94,11 @@ const bigCommerceOrders = {
     try {
       const { orderId } = req.params;
       const data = await getOrderProductsFunc(orderId);
+      if (!data) res.sendStatus(400);
       res.status(200).send(data);
     } catch (error) {
       res.sendStatus(400);
-      console.log(chalk.redBg(JSON.stringify(error)));
+      console.log(error);
     }
   },
 
@@ -103,17 +108,17 @@ const bigCommerceOrders = {
   getOrderCount: async (req, res) => {
     try {
       const data = await getOrdersCountFunc();
-      res.status(200).send(data);
+      res.status(200).send({ count: data });
     } catch (error) {
       res.sendStatus(400);
-      console.log(chalk.redBg(JSON.stringify(error)));
+      console.log(error);
     }
   },
 
   /**
    * Sends back oldest year
    */
-  getYearRange: async (req, res) => {
+  getOldestYear: async (req, res) => {
     try {
       // Get total order count to get the oldest record so we know what years
       // are valid
@@ -125,7 +130,7 @@ const bigCommerceOrders = {
       res.status(200).send(oldestYear);
     } catch (error) {
       res.sendStatus(400);
-      console.log(chalk.redBg(JSON.stringify(error)));
+      console.log(error);
     }
   },
 
@@ -164,25 +169,53 @@ const bigCommerceOrders = {
       // Quarterly
       if (Object.keys(quarterlyMapping).includes(timePeriod)) {
         const { start, end } = quarterlyMapping[timePeriod];
-        minDate = new Date(year, start).toISOString();
-        maxDate = new Date(year, end, getLastDayOfMonth(year, end), 23, 59, 59).toISOString();
+        minDate = getDateWithZeroUTCOffest(new Date(year, start));
+        maxDate = getDateWithZeroUTCOffest(
+          new Date(year, end, getLastDayOfMonth(year, end), 23, 59, 59),
+        );
 
         // Annually
       } else if (timePeriod === TIME_PERIOD.ANNUAL) {
-        minDate = new Date(year, 0).toISOString();
-        maxDate = new Date(year, 11, getLastDayOfMonth(year, 11), 23, 59, 59).toISOString();
+        minDate = getDateWithZeroUTCOffest(new Date(year, 0));
+        maxDate = getDateWithZeroUTCOffest(
+          new Date(year, 11, getLastDayOfMonth(year, 11), 23, 59, 59),
+        );
 
         // Monthly
       } else {
         const month = monthMapping[timePeriod];
-        minDate = new Date(year, month).toISOString();
-        maxDate = new Date(year, month, getLastDayOfMonth(year, month), 23, 59, 59);
+        minDate = getDateWithZeroUTCOffest(new Date(year, month));
+        maxDate = getDateWithZeroUTCOffest(
+          new Date(year, month, getLastDayOfMonth(year, month), 23, 59, 59),
+        );
       }
-
+      debugger;
       // Get all orders for timePeriod and year since both headers and details
       // rely on it
-      
-    } catch (error) {}
+      const allOrders = [];
+      let nextPageValid = true;
+      let page = 1;
+      while (nextPageValid) {
+        // eslint-disable-next-line no-await-in-loop
+        const results = await getAllOrdersFunc(page, minDate, maxDate);
+        if (results) {
+          allOrders.push(...results);
+          page += 1;
+        } else {
+          nextPageValid = false;
+        }
+      }
+
+      if (csvType === CSV_TYPE.HEADERS) {
+        // Format if headers csv requested
+        const formattedJsonFormat = allOrders.map((order) => headers(order));
+        const csv = await parseAsync(formattedJsonFormat);
+        debugger;
+      }
+    } catch (error) {
+      console.log(error);
+      res.status(400).send(error);
+    }
   },
 };
 
