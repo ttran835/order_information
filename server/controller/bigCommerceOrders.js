@@ -1,6 +1,7 @@
 require('dotenv').config();
 const chalk = require('chalk');
 const Axios = require('axios');
+const BluebirdPromise = require('bluebird');
 const { parseAsync } = require('json2csv');
 
 const { calculateMinMaxDate } = require('../helpers');
@@ -35,7 +36,7 @@ const getAllOrdersFunc = async (page, minDate, maxDate) => {
 
     return data;
   } catch (error) {
-    console.log('Error in getAllOrdersFunc');
+    console.log('Error in getAllOrdersFunc: ', error);
     throw error;
   }
 };
@@ -45,7 +46,8 @@ const getOrderProductsFunc = async (orderId) => {
     const { data } = await Axios.get(`${bcUrlV2}/orders/${orderId}/products`, optionsHeader);
     return data;
   } catch (error) {
-    console.log('Error in getOrderProductsFunc');
+    console.log('Error in getOrderProductsFunc: ', error);
+    debugger;
     throw error;
   }
 };
@@ -55,7 +57,7 @@ const getOrdersCountFunc = async () => {
     const { data } = await Axios.get(`${bcUrlV2}/orders/count`, optionsHeader);
     return data.count;
   } catch (error) {
-    console.log('Error in getOrdersCountFunc');
+    console.log('Error in getOrdersCountFunc: ', error);
     throw error;
   }
 };
@@ -123,7 +125,7 @@ const bigCommerceOrders = {
       const lastOrder = (await getAllOrdersFunc(lastPage)).pop();
       const oldestYear = new Date(lastOrder.date_created).getFullYear();
 
-      res.status(200).send(oldestYear);
+      res.status(200).send({ oldestYear });
     } catch (error) {
       res.sendStatus(400);
       console.log(error);
@@ -135,6 +137,7 @@ const bigCommerceOrders = {
    */
   getCsvs: async (req, res) => {
     try {
+      req.setTimeout(1200000);
       const { csvType, timePeriod, year } = req.params;
 
       // First calculate min and max dates to put for query params
@@ -160,12 +163,28 @@ const bigCommerceOrders = {
 
       if (csvType === CSV_TYPE.HEADERS) {
         // Format if headers csv requested
-        const formattedJsonFormat = allOrders.map((order) => headers(order));
-        const csv = await parseAsync(formattedJsonFormat);
+        const allOrdersJsonFormatted = allOrders.map((order) => headers(order));
+        const csv = await parseAsync(allOrdersJsonFormatted);
         // Send back csv
         debugger;
       } else {
         // Get all details for all the invoices gotten from above
+        const allDetails = [];
+        console.time('getAllDetails');
+        await BluebirdPromise.map(
+          allOrders,
+          async ({ id, date_created, date_shipped }) => {
+            const currentDetails = await getOrderProductsFunc(id);
+            allDetails.push(
+              ...currentDetails.map((detail) => ({ ...detail, date_created, date_shipped })),
+            );
+          },
+          { concurrency: 1 },
+        );
+        console.timeEnd('getAllDetails');
+        const allDetailsJsonFormatted = allDetails.map((detail) => details(detail));
+        const csv = await parseAsync(allDetailsJsonFormatted);
+        debugger;
       }
     } catch (error) {
       console.log(error);

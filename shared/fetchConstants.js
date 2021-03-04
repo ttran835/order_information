@@ -1,7 +1,7 @@
 const TIME_PERIOD = {
   // Monthly
   JANUARY: 'january',
-  FEBRUARY: 'februrary',
+  FEBRUARY: 'february',
   MARCH: 'march',
   APRIL: 'april',
   MAY: 'may',

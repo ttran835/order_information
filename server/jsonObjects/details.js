@@ -1,6 +1,8 @@
-const details = (orderProduct, date_created, date_shipped) => {
+const details = (orderProduct) => {
   const {
-    id: invoice_number,
+    order_id: invoice_number,
+    date_created,
+    date_shipped,
     base_total,
     id,
     is_refunded,
