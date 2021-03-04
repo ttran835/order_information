@@ -13,7 +13,7 @@ const TIME_PERIOD = {
   NOVEMBER: 'november',
   DECEMBER: 'december',
   // Quarterly
-  JAN_TO_MARCH: 'jan-march',
+  JAN_TO_MARCH: 'january-march',
   APRIL_TO_JUNE: 'april-june',
   JULY_TO_SEPTEMBER: 'july-september',
   OCTOBER_TO_DECEMBER: 'october-december',
