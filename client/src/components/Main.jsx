@@ -70,6 +70,11 @@ class Main extends React.Component {
     });
   };
 
+  capitalize = (s) => {
+    if (typeof s !== 'string') return '';
+    return s.charAt(0).toUpperCase() + s.slice(1);
+  };
+
   onClickButtons = async (csvType) => {
     try {
       const { chosenYear, timePeriod, errorMessage } = this.state;
@@ -82,7 +87,7 @@ class Main extends React.Component {
       if (!data) {
         this.setState({ errorMessage: 'No orders found for the selected time period' });
       } else {
-        fileDownload(data, `${csvType}.csv`);
+        fileDownload(data, `${this.capitalize(csvType)}_${timePeriod}_${chosenYear}.csv`);
       }
     } catch (error) {
       this.setState({
