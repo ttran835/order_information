@@ -1,10 +1,10 @@
 import React from 'react';
 import axios from 'axios';
+import fileDownload from 'js-file-download';
 
 import urls from '../_requests/urls';
 
 import { CSV_TYPE, TIME_PERIOD } from '../../../shared/fetchConstants';
-import { time } from 'faker';
 
 const FREQUENCY_TYPE = {
   MONTHLY: 'Monthly',
@@ -42,6 +42,8 @@ class Main extends React.Component {
       frequencyType: FREQUENCY_TYPE.MONTHLY,
       timePeriod: TIME_PERIOD.JANUARY,
       chosenYear: null,
+      loading: true,
+      downloading: false,
     };
   }
 
@@ -55,83 +57,94 @@ class Main extends React.Component {
     for (let i = currentYear; i >= oldestYear; i--) {
       validYears.push(i);
     }
-    this.setState({ validYears, chosenYear: currentYear });
+    this.setState({ validYears, chosenYear: currentYear, loading: false });
   };
 
-  onClickButtons = (csvType) => {
+  onClickButtons = async (csvType) => {
     const { chosenYear, timePeriod } = this.state;
-    const url = `${urls.bcUrls}/csv/${csvType}/time-period/${timePeriod}/year/${chosenYear}`;
+    const url = `${urls.bcUrls}/orders/csv/${csvType}/time-period/${timePeriod}/year/${chosenYear}`;
+    this.setState({ downloading: true });
+    const { data } = await axios.get(url);
+    fileDownload(data, `${csvType}.csv`);
+    this.setState({ downloading: false });
   };
 
   render() {
-    const { frequencyType, validYears } = this.state;
+    const { frequencyType, validYears, loading, downloading } = this.state;
+    const loadingOrDownloading = <h2>{`${loading ? 'Loading...' : 'Downloading...'}`}</h2>;
     return (
       <div>
         <h1>Download Headers Or Details CSV</h1>
-        <div style={{ display: 'flex' }}>
-          <h4>Year:</h4>
-          <select onChange={(e) => this.setState({ chosenYear: e.target.value })}>
-            {validYears.map((year) => (
-              <option value={year} key={year}>
-                {year}
-              </option>
-            ))}
-          </select>
-        </div>
-        <>
-          <span>Frequency: </span>
-          <select
-            onChange={(e) => {
-              const chosenFrequencyType = e.target.value;
-              let timePeriod;
-              if (chosenFrequencyType === FREQUENCY_TYPE.ANNUALLY) {
-                timePeriod = TIME_PERIOD.ANNUAL;
-              } else if (chosenFrequencyType === FREQUENCY_TYPE.MONTHLY) {
-                timePeriod = MONTHS[0];
-              } else {
-                timePeriod = QUARTERS[0];
-              }
+        {loading || downloading ? (
+          loadingOrDownloading
+        ) : (
+          <>
+            <div style={{ display: 'flex' }}>
+              <h4>Year:</h4>
+              <select onChange={(e) => this.setState({ chosenYear: e.target.value })}>
+                {validYears.map((year) => (
+                  <option value={year} key={year}>
+                    {year}
+                  </option>
+                ))}
+              </select>
+            </div>
+            <>
+              <span>Frequency: </span>
+              <select
+                onChange={(e) => {
+                  const chosenFrequencyType = e.target.value;
+                  let timePeriod;
+                  if (chosenFrequencyType === FREQUENCY_TYPE.ANNUALLY) {
+                    timePeriod = TIME_PERIOD.ANNUAL;
+                  } else if (chosenFrequencyType === FREQUENCY_TYPE.MONTHLY) {
+                    timePeriod = MONTHS[0];
+                  } else {
+                    timePeriod = QUARTERS[0];
+                  }
 
-              this.setState({
-                frequencyType: chosenFrequencyType,
-                timePeriod,
-              });
-            }}>
-            {Object.values(FREQUENCY_TYPE).map((freqType) => (
-              <option key={freqType} value={freqType}>
-                {freqType}
-              </option>
-            ))}
-          </select>
-        </>
-        {frequencyType === FREQUENCY_TYPE.MONTHLY && (
-          <>
-            <span>Month: </span>
-            <select onChange={(e) => this.setState({ timePeriod: e.target.value })}>
-              {MONTHS.map((month) => (
-                <option value={month} key={month}>
-                  {month}
-                </option>
-              ))}
-            </select>
+                  this.setState({
+                    frequencyType: chosenFrequencyType,
+                    timePeriod,
+                  });
+                }}>
+                {Object.values(FREQUENCY_TYPE).map((freqType) => (
+                  <option key={freqType} value={freqType}>
+                    {freqType}
+                  </option>
+                ))}
+              </select>
+            </>
+            {frequencyType === FREQUENCY_TYPE.MONTHLY && (
+              <>
+                <span>Month: </span>
+                <select onChange={(e) => this.setState({ timePeriod: e.target.value })}>
+                  {MONTHS.map((month) => (
+                    <option value={month} key={month}>
+                      {month}
+                    </option>
+                  ))}
+                </select>
+              </>
+            )}
+            {frequencyType === FREQUENCY_TYPE.QUARTERLY && (
+              <>
+                <span>Month: </span>
+                <select onChange={(e) => this.setState({ timePeriod: e.target.value })}>
+                  {QUARTERS.map((quarter) => (
+                    <option value={quarter} key={quarter}>
+                      {quarter}
+                    </option>
+                  ))}
+                </select>
+              </>
+            )}
+            <div>
+              <button onClick={() => this.onClickButtons(CSV_TYPE.HEADERS)}>Headers CSV</button>
+              <button onClick={() => this.onClickButtons(CSV_TYPE.DETAILS)}>Details CSV</button>
+            </div>
           </>
         )}
-        {frequencyType === FREQUENCY_TYPE.QUARTERLY && (
-          <>
-            <span>Month: </span>
-            <select onChange={(e) => this.setState({ timePeriod: e.target.value })}>
-              {QUARTERS.map((quarter) => (
-                <option value={quarter} key={quarter}>
-                  {quarter}
-                </option>
-              ))}
-            </select>
-          </>
-        )}
-        <div>
-          <button>Headers CSV</button>
-          <button>Details CSV</button>
-        </div>
       </div>
     );
   }

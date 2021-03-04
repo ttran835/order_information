@@ -165,27 +165,35 @@ const bigCommerceOrders = {
         // Format if headers csv requested
         const allOrdersJsonFormatted = allOrders.map((order) => headers(order));
         const csv = await parseAsync(allOrdersJsonFormatted);
+
         // Send back csv
-        debugger;
-      } else {
-        // Get all details for all the invoices gotten from above
-        const allDetails = [];
-        console.time('getAllDetails');
-        await BluebirdPromise.map(
-          allOrders,
-          async ({ id, date_created, date_shipped }) => {
-            const currentDetails = await getOrderProductsFunc(id);
-            allDetails.push(
-              ...currentDetails.map((detail) => ({ ...detail, date_created, date_shipped })),
-            );
-          },
-          { concurrency: 1 },
-        );
-        console.timeEnd('getAllDetails');
-        const allDetailsJsonFormatted = allDetails.map((detail) => details(detail));
-        const csv = await parseAsync(allDetailsJsonFormatted);
+        res.attachment('headers.csv');
+        return res.status(200).send(csv);
         debugger;
       }
+      // Get all details for all the invoices gotten from above
+      const allDetails = [];
+      console.time('getAllDetails');
+      await BluebirdPromise.map(
+        allOrders,
+        async ({ id, date_created, date_shipped }) => {
+          const currentDetails = await getOrderProductsFunc(id);
+          allDetails.push(
+            ...currentDetails.map((detail) => ({ ...detail, date_created, date_shipped })),
+          );
+        },
+        { concurrency: 1 },
+      );
+      console.timeEnd('getAllDetails');
+
+      // Format for details
+      const allDetailsJsonFormatted = allDetails.map((detail) => details(detail));
+      const csv = await parseAsync(allDetailsJsonFormatted);
+
+      // Send back csv
+      res.attachment('details.csv');
+      return res.status(200).send(csv);
+      debugger;
     } catch (error) {
       console.log(error);
       res.status(400).send(error);
