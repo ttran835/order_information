@@ -44,6 +44,7 @@ class Main extends React.Component {
       chosenYear: null,
       loading: true,
       downloading: false,
+      errorMessage: '',
     };
   }
 
@@ -61,27 +62,45 @@ class Main extends React.Component {
   };
 
   onClickButtons = async (csvType) => {
-    const { chosenYear, timePeriod } = this.state;
+    const { chosenYear, timePeriod, errorMessage } = this.state;
+    if (errorMessage) {
+      this.setState({ errorMessage: '' });
+    }
     const url = `${urls.bcUrls}/orders/csv/${csvType}/time-period/${timePeriod}/year/${chosenYear}`;
     this.setState({ downloading: true });
     const { data } = await axios.get(url);
-    fileDownload(data, `${csvType}.csv`);
+    if (!data) {
+      this.setState({ errorMessage: 'No orders found for the selected time period' });
+    } else {
+      fileDownload(data, `${csvType}1.csv`);
+    }
     this.setState({ downloading: false });
   };
 
   render() {
-    const { frequencyType, validYears, loading, downloading } = this.state;
+    const {
+      frequencyType,
+      validYears,
+      loading,
+      downloading,
+      errorMessage,
+      chosenYear,
+      timePeriod,
+    } = this.state;
     const loadingOrDownloading = <h2>{`${loading ? 'Loading...' : 'Downloading...'}`}</h2>;
     return (
       <div>
         <h1>Download Headers Or Details CSV</h1>
+        {!!errorMessage && <h3 style={{ color: 'red' }}>{errorMessage}</h3>}
         {loading || downloading ? (
           loadingOrDownloading
         ) : (
           <>
             <div style={{ display: 'flex' }}>
               <h4>Year:</h4>
-              <select onChange={(e) => this.setState({ chosenYear: e.target.value })}>
+              <select
+                value={chosenYear}
+                onChange={(e) => this.setState({ chosenYear: e.target.value })}>
                 {validYears.map((year) => (
                   <option value={year} key={year}>
                     {year}
@@ -92,20 +111,21 @@ class Main extends React.Component {
             <>
               <span>Frequency: </span>
               <select
+                value={frequencyType}
                 onChange={(e) => {
                   const chosenFrequencyType = e.target.value;
-                  let timePeriod;
+                  let resettedTimePeriod;
                   if (chosenFrequencyType === FREQUENCY_TYPE.ANNUALLY) {
-                    timePeriod = TIME_PERIOD.ANNUAL;
+                    resettedTimePeriod = TIME_PERIOD.ANNUAL;
                   } else if (chosenFrequencyType === FREQUENCY_TYPE.MONTHLY) {
-                    timePeriod = MONTHS[0];
+                    resettedTimePeriod = MONTHS[0];
                   } else {
-                    timePeriod = QUARTERS[0];
+                    resettedTimePeriod = QUARTERS[0];
                   }
 
                   this.setState({
                     frequencyType: chosenFrequencyType,
-                    timePeriod,
+                    timePeriod: resettedTimePeriod,
                   });
                 }}>
                 {Object.values(FREQUENCY_TYPE).map((freqType) => (
@@ -118,7 +138,9 @@ class Main extends React.Component {
             {frequencyType === FREQUENCY_TYPE.MONTHLY && (
               <>
                 <span>Month: </span>
-                <select onChange={(e) => this.setState({ timePeriod: e.target.value })}>
+                <select
+                  value={timePeriod}
+                  onChange={(e) => this.setState({ timePeriod: e.target.value })}>
                   {MONTHS.map((month) => (
                     <option value={month} key={month}>
                       {month}
@@ -130,7 +152,9 @@ class Main extends React.Component {
             {frequencyType === FREQUENCY_TYPE.QUARTERLY && (
               <>
                 <span>Month: </span>
-                <select onChange={(e) => this.setState({ timePeriod: e.target.value })}>
+                <select
+                  value={timePeriod}
+                  onChange={(e) => this.setState({ timePeriod: e.target.value })}>
                   {QUARTERS.map((quarter) => (
                     <option value={quarter} key={quarter}>
                       {quarter}
