@@ -52,7 +52,6 @@ const getOrderProductsFunc = async (orderId, page = 1) => {
     return data;
   } catch (error) {
     // console.log('Error in getOrderProductsFunc: ', error);
-    // debugger;
     throw error;
   }
 };
@@ -149,7 +148,7 @@ const bigCommerceOrders = {
 
       // First calculate min and max dates to put for query params
       const { minDate, maxDate } = calculateMinMaxDate(timePeriod, year);
-      // debugger;
+
       // Get all orders for timePeriod and year since both headers and details
       // rely on it
       const allOrders = [];
@@ -178,7 +177,6 @@ const bigCommerceOrders = {
         const allOrdersJsonFormatted = allOrders.map((order) => headers(order));
         const csv = await parseAsync(allOrdersJsonFormatted);
 
-        // debugger;
         // Send back csv
         res.attachment('headers.csv');
         return res.status(200).send(csv);
@@ -234,7 +232,6 @@ const bigCommerceOrders = {
       const allDetailsJsonFormatted = sortedAllDetails.map((detail) => details(detail));
       const csv = await parseAsync(allDetailsJsonFormatted);
 
-      // debugger;
       // Send back csv
       res.attachment('details.csv');
       return res.status(200).send(csv);
