@@ -51,7 +51,7 @@ const getOrderProductsFunc = async (orderId, page = 1) => {
     );
     return data;
   } catch (error) {
-    console.log('Error in getOrderProductsFunc: ', error);
+    // console.log('Error in getOrderProductsFunc: ', error);
     // debugger;
     throw error;
   }
@@ -143,7 +143,8 @@ const bigCommerceOrders = {
    */
   getCsvs: async (req, res) => {
     try {
-      req.setTimeout(1200000);
+      // Put 30 minutes since details for annually takes forever cause of rate-limiting
+      req.setTimeout(1800000);
       const { csvType, timePeriod, year } = req.params;
 
       // First calculate min and max dates to put for query params
@@ -158,7 +159,7 @@ const bigCommerceOrders = {
       while (notLastPage) {
         const results = await getAllOrdersFunc(page, minDate, maxDate);
         if (results) {
-          allOrders.push(...results);
+          allOrders.push(...results.filter(({ status }) => status !== 'Incomplete'));
           // Only go on to next page if there are at least 250 results which
           // is the limit
           if (results.length < 250) {
@@ -215,6 +216,7 @@ const bigCommerceOrders = {
               requestWentThrough = true;
               if (allDetails.length % 5 === 0) console.log(allDetails.length);
             } catch (error) {
+              console.log('rate-limited reached');
               setTimeout(() => {}, 5000);
             }
           }
