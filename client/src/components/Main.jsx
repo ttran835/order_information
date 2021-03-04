@@ -82,7 +82,7 @@ class Main extends React.Component {
       if (!data) {
         this.setState({ errorMessage: 'No orders found for the selected time period' });
       } else {
-        fileDownload(data, `${csvType}1.csv`);
+        fileDownload(data, `${csvType}.csv`);
       }
     } catch (error) {
       this.setState({

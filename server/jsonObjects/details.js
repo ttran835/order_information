@@ -19,10 +19,14 @@ const details = (orderProduct) => {
     discount,
   } = orderProduct;
 
+  // Get rid of +0000 for dates
+  const [date_created_no_zeros] = date_created.split(' +0000');
+  const [date_shipped_no_zeros] = date_shipped.split(' +0000');
+
   return {
     invoice_number,
-    date_created,
-    date_shipped,
+    date_created: date_created_no_zeros,
+    date_shipped: date_shipped_no_zeros,
     base_total,
     id,
     is_refunded,
