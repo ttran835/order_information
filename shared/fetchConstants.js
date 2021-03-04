@@ -1,24 +1,24 @@
 const TIME_PERIOD = {
   // Monthly
-  JANUARY: 'january',
-  FEBRUARY: 'february',
-  MARCH: 'march',
-  APRIL: 'april',
-  MAY: 'may',
-  JUNE: 'june',
-  JULY: 'july',
-  AUGUST: 'august',
-  SEPTEMBER: 'september',
-  OCTOBER: 'october',
-  NOVEMBER: 'november',
-  DECEMBER: 'december',
+  JANUARY: 'January',
+  FEBRUARY: 'February',
+  MARCH: 'March',
+  APRIL: 'April',
+  MAY: 'May',
+  JUNE: 'June',
+  JULY: 'July',
+  AUGUST: 'August',
+  SEPTEMBER: 'September',
+  OCTOBER: 'October',
+  NOVEMBER: 'November',
+  DECEMBER: 'Cecember',
   // Quarterly
-  JAN_TO_MARCH: 'january-march',
-  APRIL_TO_JUNE: 'april-june',
-  JULY_TO_SEPTEMBER: 'july-september',
-  OCTOBER_TO_DECEMBER: 'october-december',
+  JAN_TO_MARCH: 'January-March',
+  APRIL_TO_JUNE: 'April-June',
+  JULY_TO_SEPTEMBER: 'July-September',
+  OCTOBER_TO_DECEMBER: 'October-December',
   // Annually
-  ANNUAL: 'annual',
+  ANNUAL: 'Annual',
 };
 
 const CSV_TYPE = {

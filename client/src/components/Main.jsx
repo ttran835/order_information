@@ -61,20 +61,38 @@ class Main extends React.Component {
     this.setState({ validYears, chosenYear: currentYear, loading: false });
   };
 
+  componentDidCatch = (error) => {
+    console.log(error);
+    this.setState({
+      loading: false,
+      downloading: false,
+      errorMessage: error.message || 'Unable to load component',
+    });
+  };
+
   onClickButtons = async (csvType) => {
-    const { chosenYear, timePeriod, errorMessage } = this.state;
-    if (errorMessage) {
-      this.setState({ errorMessage: '' });
+    try {
+      const { chosenYear, timePeriod, errorMessage } = this.state;
+      if (errorMessage) {
+        this.setState({ errorMessage: '' });
+      }
+      const url = `${urls.bcUrls}/orders/csv/${csvType}/time-period/${timePeriod}/year/${chosenYear}`;
+      this.setState({ downloading: true });
+      const { data } = await axios.get(url);
+      if (!data) {
+        this.setState({ errorMessage: 'No orders found for the selected time period' });
+      } else {
+        fileDownload(data, `${csvType}1.csv`);
+      }
+    } catch (error) {
+      this.setState({
+        errorMessage:
+          error.response.data.message ||
+          'Something went wrong in the download process. Please try again or check your server',
+      });
+    } finally {
+      this.setState({ downloading: false });
     }
-    const url = `${urls.bcUrls}/orders/csv/${csvType}/time-period/${timePeriod}/year/${chosenYear}`;
-    this.setState({ downloading: true });
-    const { data } = await axios.get(url);
-    if (!data) {
-      this.setState({ errorMessage: 'No orders found for the selected time period' });
-    } else {
-      fileDownload(data, `${csvType}1.csv`);
-    }
-    this.setState({ downloading: false });
   };
 
   render() {

@@ -47,7 +47,7 @@ const getOrderProductsFunc = async (orderId) => {
     return data;
   } catch (error) {
     console.log('Error in getOrderProductsFunc: ', error);
-    debugger;
+    // debugger;
     throw error;
   }
 };
@@ -142,7 +142,7 @@ const bigCommerceOrders = {
 
       // First calculate min and max dates to put for query params
       const { minDate, maxDate } = calculateMinMaxDate(timePeriod, year);
-      debugger;
+      // debugger;
       // Get all orders for timePeriod and year since both headers and details
       // rely on it
       const allOrders = [];
@@ -166,10 +166,10 @@ const bigCommerceOrders = {
         const allOrdersJsonFormatted = allOrders.map((order) => headers(order));
         const csv = await parseAsync(allOrdersJsonFormatted);
 
+        // debugger;
         // Send back csv
         res.attachment('headers.csv');
         return res.status(200).send(csv);
-        debugger;
       }
       // Get all details for all the invoices gotten from above
       const allDetails = [];
@@ -182,18 +182,23 @@ const bigCommerceOrders = {
             ...currentDetails.map((detail) => ({ ...detail, date_created, date_shipped })),
           );
         },
-        { concurrency: 1 },
+        { concurrency: 10 },
       );
       console.timeEnd('getAllDetails');
 
+      // Sort by date
+      const sortedAllDetails = allDetails.sort(
+        (a, b) => new Date(b.date_created) - new Date(a.date_created),
+      );
+
       // Format for details
-      const allDetailsJsonFormatted = allDetails.map((detail) => details(detail));
+      const allDetailsJsonFormatted = sortedAllDetails.map((detail) => details(detail));
       const csv = await parseAsync(allDetailsJsonFormatted);
 
+      // debugger;
       // Send back csv
       res.attachment('details.csv');
       return res.status(200).send(csv);
-      debugger;
     } catch (error) {
       console.log(error);
       res.status(400).send(error);
