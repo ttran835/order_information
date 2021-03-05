@@ -219,7 +219,7 @@ const bigCommerceOrders = {
             }
           }
         },
-        { concurrency: 8 },
+        { concurrency: 7 },
       );
       console.timeEnd('getAllDetails');
 
