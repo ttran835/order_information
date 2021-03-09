@@ -16,12 +16,17 @@ const details = (orderProduct) => {
     total_ex_tax,
     total_inc_tax,
     total_tax,
-    discount,
+    applied_discounts,
   } = orderProduct;
 
   // Get rid of +0000 for dates
   const [date_created_no_zeros] = date_created.split(' +0000');
   const [date_shipped_no_zeros] = date_shipped.split(' +0000');
+
+  const discount = applied_discounts.reduce((acc, { amount }) => {
+    acc += +amount;
+    return acc;
+  }, 0);
 
   return {
     invoice_number,
