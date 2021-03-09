@@ -2,8 +2,18 @@ const { TIME_PERIOD } = require('../../shared/fetchConstants');
 
 const getLastDayOfMonth = (y, m) => new Date(y, m + 1, 0).getDate();
 
+const convertToRFC2822 = (date) => {
+  const dateString = date.toString();
+  const [dateWithNoParenthesis] = dateString.split(' (');
+  const dateArray = dateWithNoParenthesis.split(' ');
+  [dateArray[1], dateArray[2]] = [dateArray[2], dateArray[1]];
+  dateArray[0] += ',';
+  dateArray.pop();
+  return dateArray.join(' ');
+};
+
 const getDateWithZeroUTCOffest = (date) =>
-  new Date(date.getTime() - date.getTimezoneOffset() * 60000).toISOString();
+  convertToRFC2822(new Date(date));
 
 const calculateMinMaxDate = (timePeriod, year) => {
   const quarterlyMapping = {
@@ -33,23 +43,19 @@ const calculateMinMaxDate = (timePeriod, year) => {
   // Quarterly
   if (Object.keys(quarterlyMapping).includes(timePeriod)) {
     const { start, end } = quarterlyMapping[timePeriod];
-    minDate = getDateWithZeroUTCOffest(new Date(year, start));
-    maxDate = getDateWithZeroUTCOffest(
-      new Date(year, end, getLastDayOfMonth(year, end), 23, 59, 59),
-    );
+    minDate = new Date(year, start).toISOString();
+    maxDate = new Date(year, end, getLastDayOfMonth(year, end), 23, 59, 59).toISOString();
 
     // Annually
   } else if (timePeriod === TIME_PERIOD.ANNUAL) {
-    minDate = getDateWithZeroUTCOffest(new Date(year, 0));
-    maxDate = getDateWithZeroUTCOffest(new Date(year, 11, getLastDayOfMonth(year, 11), 23, 59, 59));
+    minDate = new Date(year, 0).toISOString();
+    maxDate = new Date(year, 11, getLastDayOfMonth(year, 11), 23, 59, 59).toISOString();
 
     // Monthly
   } else {
     const month = monthMapping[timePeriod];
-    minDate = getDateWithZeroUTCOffest(new Date(year, month));
-    maxDate = getDateWithZeroUTCOffest(
-      new Date(year, month, getLastDayOfMonth(year, month), 23, 59, 59),
-    );
+    minDate = new Date(year, month).toISOString();
+    maxDate = new Date(year, month, getLastDayOfMonth(year, month), 23, 59, 59).toISOString();
   }
 
   return { minDate, maxDate };
