@@ -1,4 +1,4 @@
-const { getDateWithZeroUTCOffest } = require('../helpers');
+const { convertToRFC2822 } = require('../helpers');
 
 const details = (orderProduct) => {
   const {
@@ -21,9 +21,9 @@ const details = (orderProduct) => {
     applied_discounts,
   } = orderProduct;
 
-  // Convert dates to local time from UTC
-  const convertedDateCreated = date_created ? getDateWithZeroUTCOffest(new Date(date_created)) : '';
-  const convertedDateShipped = date_shipped ? getDateWithZeroUTCOffest(new Date(date_shipped)) : '';
+  // Convert dates to local time from and RFC2822
+  const convertedDateCreated = date_created ? convertToRFC2822(date_created) : '';
+  const convertedDateShipped = date_shipped ? convertToRFC2822(date_shipped) : '';
 
   const discount = applied_discounts.reduce((acc, { amount }) => {
     acc += +amount;

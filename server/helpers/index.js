@@ -3,7 +3,7 @@ const { TIME_PERIOD } = require('../../shared/fetchConstants');
 const getLastDayOfMonth = (y, m) => new Date(y, m + 1, 0).getDate();
 
 const convertToRFC2822 = (date) => {
-  const dateString = date.toString();
+  const dateString = new Date(date).toString();
   const [dateWithNoParenthesis] = dateString.split(' (');
   const dateArray = dateWithNoParenthesis.split(' ');
   [dateArray[1], dateArray[2]] = [dateArray[2], dateArray[1]];
@@ -12,8 +12,6 @@ const convertToRFC2822 = (date) => {
   return dateArray.join(' ');
 };
 
-const getDateWithZeroUTCOffest = (date) =>
-  convertToRFC2822(new Date(date));
 
 const calculateMinMaxDate = (timePeriod, year) => {
   const quarterlyMapping = {
@@ -61,4 +59,4 @@ const calculateMinMaxDate = (timePeriod, year) => {
   return { minDate, maxDate };
 };
 
-module.exports = { getLastDayOfMonth, getDateWithZeroUTCOffest, calculateMinMaxDate };
+module.exports = { getLastDayOfMonth, convertToRFC2822, calculateMinMaxDate };

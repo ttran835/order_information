@@ -1,4 +1,4 @@
-const { getDateWithZeroUTCOffest } = require('../helpers');
+const { convertToRFC2822 } = require('../helpers');
 
 const headers = (order) => {
   const {
@@ -23,9 +23,9 @@ const headers = (order) => {
   const customer_address = `${street_1}, ${street_2 || ''}, ${city}, ${state}, ${zip}`;
   const customer_number = phone || '';
 
-  // Convert dates to local time from UTC
-  const convertedDateCreated = date_created ? getDateWithZeroUTCOffest(new Date(date_created)) : '';
-  const convertedDateShipped = date_shipped ? getDateWithZeroUTCOffest(new Date(date_shipped)) : '';
+  // Convert dates to local time and RFC2822
+  const convertedDateCreated = date_created ? convertToRFC2822(date_created) : '';
+  const convertedDateShipped = date_shipped ? convertToRFC2822(date_shipped) : '';
 
   return {
     invoice_number,
