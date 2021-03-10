@@ -66,6 +66,18 @@ const getOrdersCountFunc = async () => {
   }
 };
 
+const getRefundDetails = async (orderId) => {
+  try {
+    const {
+      data: { data },
+    } = await Axios.get(`${bcUrlV3}/orders/${orderId}/payment_actions/refunds`, optionsHeader);
+    return data;
+  } catch (error) {
+    // console.log('Error in getRefundDetails: ', error);
+    throw error;
+  }
+};
+
 /**
  * Requests to BigCommerce API can only be made via server
  * You cannot make requests on client side.
@@ -220,6 +232,38 @@ const bigCommerceOrders = {
           }
         },
         { concurrency: 7 },
+      );
+
+      // Check for refunds in the details
+      await BluebirdPromise.map(
+        allDetails,
+        async (detail) => {
+          let refundRequestWentThrough = false;
+          // Rate limit :(
+          while (!refundRequestWentThrough) {
+            try {
+              // Get refund date from another request if refunded
+              if (detail.is_refunded) {
+                const refundArray = await getRefundDetails(detail.order_id);
+                // In case of multiple refunds, find the correct one by
+                // matching up the item id
+                const itemIdToCreatedMapping = refundArray.reduce((acc, { created, items }) => {
+                  items.forEach(({ item_id }) => {
+                    acc[item_id] = created;
+                  });
+                  return acc;
+                }, {});
+                const refundDate = itemIdToCreatedMapping[detail.id];
+                detail.date_created = refundDate;
+                detail.date_shipped = refundDate;
+              }
+              refundRequestWentThrough = true;
+            } catch (error) {
+              console.log('refund order rate-limited reached');
+              setTimeout(() => {}, 5000);
+            }
+          }
+        },
       );
       console.timeEnd('getAllDetails');
 
