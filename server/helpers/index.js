@@ -12,8 +12,7 @@ const convertToRFC2822 = (date) => {
   return dateArray.join(' ');
 };
 
-
-const calculateMinMaxDate = (timePeriod, year) => {
+const calculateMinMaxDate = (timePeriod, year, date = null) => {
   const quarterlyMapping = {
     [TIME_PERIOD.JAN_TO_MARCH]: { start: 0, end: 2 },
     [TIME_PERIOD.APRIL_TO_JUNE]: { start: 3, end: 5 },
@@ -38,8 +37,15 @@ const calculateMinMaxDate = (timePeriod, year) => {
 
   let minDate;
   let maxDate;
+
+  // Daily
+  if (date) {
+    minDate = new Date(date).toISOString();
+    maxDate = new Date(new Date(date).setHours(23, 59, 59)).toISOString();
+  }
+
   // Quarterly
-  if (Object.keys(quarterlyMapping).includes(timePeriod)) {
+  else if (Object.keys(quarterlyMapping).includes(timePeriod)) {
     const { start, end } = quarterlyMapping[timePeriod];
     minDate = new Date(year, start).toISOString();
     maxDate = new Date(year, end, getLastDayOfMonth(year, end), 23, 59, 59).toISOString();
