@@ -8,7 +8,9 @@
     "build": "webpack -w --config webpack.dev.js",
     "nodemon": "nodemon server/index.js",
     "start:dev": "nodemon server/index.js & webpack-dev-server --config webpack.dev.js",
-    "start:dev:debug": "nodemon --verbose --inspect server/index.js & webpack-dev-server --config webpack.dev.js"
+    "start:dev:debug": "nodemon --verbose --inspect server/index.js & webpack-dev-server --config webpack.dev.js",
+    "heroku-prebuild": "npm install && npm install --dev",
+    "heroku-postbuild": "webpack --config webpack.prod.js --source-map"
   },
   "engines": {
     "node": "10.16"
