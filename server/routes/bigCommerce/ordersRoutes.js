@@ -11,4 +11,4 @@ OrdersRoutes.route('/csv/:csvType/date/:date').get(bigCommerceOrders.getCsvs);
 module.exports = { OrdersRoutes };
 
 
-// TIME SPENT SO FAR: 14 HOURS
+// TIME SPENT SO FAR: 15 HOURS
