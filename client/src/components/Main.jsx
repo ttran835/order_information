@@ -45,7 +45,7 @@ class Main extends React.Component {
       timePeriod: TIME_PERIOD.JANUARY,
       chosenYear: null,
       // Way of getting current day midnight
-      dailyDate: new Date(new Date().setHours(0,0,0,0)),
+      dailyDate: new Date(new Date().setHours(0, 0, 0, 0)).toString(),
       loading: true,
       downloading: false,
       errorMessage: '',
