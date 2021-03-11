@@ -13,6 +13,8 @@ const { CSV_TYPE } = require('../../shared/fetchConstants');
 const bcUrlV2 = process.env.BC_API_PATH_V2;
 const bcUrlV3 = process.env.BC_API_PATH_V3;
 
+console.log(process.env.BC_ACCESS_TOKEN);
+
 const optionsHeader = {
   async: true,
   crossDomain: true,
