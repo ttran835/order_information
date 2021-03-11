@@ -20,8 +20,7 @@ module.exports = (isDevelopment) => {
 
   const productionEnv = {};
 
-  let localEnvConfigs = dotenv.config({ path: localDevEnv }).parsed;
-  localEnvConfigs = { ...localEnvConfigs, bigCommerceUrl: 'http://localhost:3000/api/v1/big-commerce' };
+  const localEnvConfigs = dotenv.config({ path: localDevEnv }).parsed;
 
   const fileEnv = !isDevelopment ? productionEnv : localEnvConfigs;
 
@@ -45,7 +44,7 @@ module.exports = (isDevelopment) => {
       contentBase: path.join(__dirname, DIST_DIR),
       historyApiFallback: true,
       overlay: true,
-      port: 8000,
+      port: 8080,
       host: 'localhost',
     },
     watchOptions: {
