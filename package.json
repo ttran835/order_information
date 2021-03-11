@@ -7,7 +7,8 @@
     "start": "node server/index.js",
     "build": "webpack -w --config webpack.dev.js",
     "nodemon": "nodemon server/index.js",
-    "start:dev": "nodemon server/index.js & webpack-dev-server --config webpack.dev.js"
+    "start:dev": "nodemon server/index.js & webpack-dev-server --config webpack.dev.js",
+    "start:dev:debug": "nodemon --verbose --inspect server/index.js & webpack-dev-server --config webpack.dev.js"
   },
   "engines": {
     "node": "10.16"
@@ -25,7 +26,9 @@
   "dependencies": {
     "axios": "^0.19.2",
     "bcrypt": "^4.0.1",
+    "bluebird": "^3.7.2",
     "body-parser": "^1.19.0",
+    "bull": "^3.20.1",
     "chalk": "^4.0.0",
     "classnames": "^2.2.6",
     "core-js": "^3.6.5",
@@ -41,6 +44,7 @@
     "js-file-download": "^0.4.12",
     "json2csv": "^5.0.1",
     "lodash": "^4.17.20",
+    "mdbreact": "git+https://oauth2:syXzCFybH3sB-zfxnQA4@git.mdbootstrap.com/mdb/react/re-pro.git#4.27.0",
     "mini-css-extract-plugin": "^0.9.0",
     "moment": "^2.26.0",
     "multer": "^1.4.2",
@@ -58,10 +62,12 @@
     "react-hook-form": "^6.12.2",
     "react-responsive-carousel": "^3.1.49",
     "react-router-dom": "^5.1.2",
+    "redis": "^3.0.2",
     "request": "^2.88.0",
     "sequelize": "^5.21.7",
     "sweetalert2": "^8.19.0",
     "terser-webpack-plugin": "^4.1.0",
+    "throng": "^5.0.0",
     "tmp": "^0.2.1",
     "uninstall": "0.0.0",
     "valid-url": "^1.0.9",

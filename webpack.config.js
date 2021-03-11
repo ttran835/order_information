@@ -45,7 +45,7 @@ module.exports = (isDevelopment) => {
       contentBase: path.join(__dirname, DIST_DIR),
       historyApiFallback: true,
       overlay: true,
-      port: 8080,
+      port: 8000,
       host: 'localhost',
     },
     watchOptions: {

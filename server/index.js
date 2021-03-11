@@ -10,7 +10,7 @@ const bodyParser = require('body-parser');
 const { router } = require('./routes');
 
 const app = express();
-const db = require('./database');
+// const db = require('./database');
 
 const whitelist = [
   'https://localhost:8080',
