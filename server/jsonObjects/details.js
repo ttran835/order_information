@@ -1,3 +1,5 @@
+const { convertToRFC2822 } = require('../helpers');
+
 const details = (orderProduct) => {
   const {
     order_id: invoice_number,
@@ -16,17 +18,25 @@ const details = (orderProduct) => {
     total_ex_tax,
     total_inc_tax,
     total_tax,
-    discount,
+    applied_discounts,
   } = orderProduct;
 
-  // Get rid of +0000 for dates
-  const [date_created_no_zeros] = date_created.split(' +0000');
-  const [date_shipped_no_zeros] = date_shipped.split(' +0000');
+  // Convert dates to local time from and RFC2822
+  const convertedDateCreated = date_created ? convertToRFC2822(date_created) : '';
+  const convertedDateShipped = date_shipped ? convertToRFC2822(date_shipped) : '';
+
+  const discount = applied_discounts.reduce((acc, { amount }) => {
+    acc += +amount;
+    return acc;
+  }, 0);
+
+  const totalExTaxWithDiscount = total_ex_tax - discount;
+  const totalIncTaxWithDiscount = total_inc_tax - discount;
 
   return {
     invoice_number,
-    date_created: date_created_no_zeros,
-    date_shipped: date_shipped_no_zeros,
+    date_created: convertedDateCreated,
+    date_shipped: convertedDateShipped,
     base_total,
     id,
     is_refunded,
@@ -37,10 +47,10 @@ const details = (orderProduct) => {
     quantity,
     quantity_refunded,
     sku,
-    total_ex_tax,
-    total_inc_tax,
-    total_tax,
-    discount,
+    total_ex_tax: is_refunded ? totalExTaxWithDiscount * -1 : totalExTaxWithDiscount,
+    total_inc_tax: is_refunded ? totalIncTaxWithDiscount * -1 : totalIncTaxWithDiscount,
+    total_tax: is_refunded ? total_tax * -1 : total_tax,
+    discount: is_refunded ? discount * -1 : discount,
   };
 };
 

@@ -1,3 +1,5 @@
+const { convertToRFC2822 } = require('../helpers');
+
 const headers = (order) => {
   const {
     id: invoice_number,
@@ -21,9 +23,9 @@ const headers = (order) => {
   const customer_address = `${street_1}, ${street_2 || ''}, ${city}, ${state}, ${zip}`;
   const customer_number = phone || '';
 
-  // Get rid of +0000 for dates
-  const [date_created_no_zeros] = date_created.split(' +0000');
-  const [date_shipped_no_zeros] = date_shipped.split(' +0000');
+  // Convert dates to local time and RFC2822
+  const convertedDateCreated = date_created ? convertToRFC2822(date_created) : '';
+  const convertedDateShipped = date_shipped ? convertToRFC2822(date_shipped) : '';
 
   return {
     invoice_number,
@@ -31,8 +33,8 @@ const headers = (order) => {
     customer_name,
     customer_number,
     customer_address,
-    date_created: date_created_no_zeros,
-    date_shipped: date_shipped_no_zeros,
+    date_created: convertedDateCreated,
+    date_shipped: convertedDateShipped,
     subtotal_ex_tax,
     subtotal_inc_tax,
     subtotal_tax,

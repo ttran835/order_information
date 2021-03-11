@@ -1,5 +1,6 @@
 import React from 'react';
 import axios from 'axios';
+import { MDBDatePicker } from 'mdbreact';
 import fileDownload from 'js-file-download';
 
 import urls from '../_requests/urls';
@@ -7,6 +8,7 @@ import urls from '../_requests/urls';
 import { CSV_TYPE, TIME_PERIOD } from '../../../shared/fetchConstants';
 
 const FREQUENCY_TYPE = {
+  DAILY: 'Daily',
   MONTHLY: 'Monthly',
   QUARTERLY: 'Quarterly',
   ANNUALLY: 'Annually',
@@ -42,6 +44,8 @@ class Main extends React.Component {
       frequencyType: FREQUENCY_TYPE.MONTHLY,
       timePeriod: TIME_PERIOD.JANUARY,
       chosenYear: null,
+      // Way of getting current day midnight
+      dailyDate: new Date(new Date().setHours(0, 0, 0, 0)).toString(),
       loading: true,
       downloading: false,
       errorMessage: '',
@@ -77,17 +81,28 @@ class Main extends React.Component {
 
   onClickButtons = async (csvType) => {
     try {
-      const { chosenYear, timePeriod, errorMessage } = this.state;
+      const { chosenYear, timePeriod, errorMessage, dailyDate, frequencyType } = this.state;
       if (errorMessage) {
         this.setState({ errorMessage: '' });
       }
-      const url = `${urls.bcUrls}/orders/csv/${csvType}/time-period/${timePeriod}/year/${chosenYear}`;
+
+      // Daily and others have a different endpoint
+      const url =
+        frequencyType === FREQUENCY_TYPE.DAILY
+          ? `${urls.bcUrls}/orders/csv/${csvType}/date/${dailyDate}`
+          : `${urls.bcUrls}/orders/csv/${csvType}/time-period/${timePeriod}/year/${chosenYear}`;
+
       this.setState({ downloading: true });
       const { data } = await axios.get(url);
       if (!data) {
         this.setState({ errorMessage: 'No orders found for the selected time period' });
       } else {
-        fileDownload(data, `${this.capitalize(csvType)}_${timePeriod}_${chosenYear}.csv`);
+        const fileName =
+          frequencyType === FREQUENCY_TYPE.DAILY
+            ? `${this.capitalize(csvType)}_${new Date(dailyDate).toLocaleDateString()}.csv`
+            : `${this.capitalize(csvType)}_${timePeriod}_${chosenYear}.csv`;
+
+        fileDownload(data, fileName);
       }
     } catch (error) {
       this.setState({
@@ -100,6 +115,10 @@ class Main extends React.Component {
     }
   };
 
+  handlePickerValue = (date) => {
+    this.setState({ dailyDate: date.toString() });
+  };
+
   render() {
     const {
       frequencyType,
@@ -109,6 +128,7 @@ class Main extends React.Component {
       errorMessage,
       chosenYear,
       timePeriod,
+      dailyDate,
     } = this.state;
     const loadingOrDownloading = <h2>{`${loading ? 'Loading...' : 'Downloading...'}`}</h2>;
     return (
@@ -119,18 +139,6 @@ class Main extends React.Component {
           loadingOrDownloading
         ) : (
           <>
-            <div style={{ display: 'flex' }}>
-              <h4>Year:</h4>
-              <select
-                value={chosenYear}
-                onChange={(e) => this.setState({ chosenYear: e.target.value })}>
-                {validYears.map((year) => (
-                  <option value={year} key={year}>
-                    {year}
-                  </option>
-                ))}
-              </select>
-            </div>
             <>
               <span>Frequency: </span>
               <select
@@ -174,7 +182,7 @@ class Main extends React.Component {
             )}
             {frequencyType === FREQUENCY_TYPE.QUARTERLY && (
               <>
-                <span>Month: </span>
+                <span>Time Period: </span>
                 <select
                   value={timePeriod}
                   onChange={(e) => this.setState({ timePeriod: e.target.value })}>
@@ -185,6 +193,28 @@ class Main extends React.Component {
                   ))}
                 </select>
               </>
+            )}
+            {frequencyType !== FREQUENCY_TYPE.DAILY && (
+              <div style={{ display: 'flex' }}>
+                <h4>Year:</h4>
+                <select
+                  value={chosenYear}
+                  onChange={(e) => this.setState({ chosenYear: e.target.value })}>
+                  {validYears.map((year) => (
+                    <option value={year} key={year}>
+                      {year}
+                    </option>
+                  ))}
+                </select>
+              </div>
+            )}
+            {frequencyType === FREQUENCY_TYPE.DAILY && (
+              <MDBDatePicker
+                valueDefault={dailyDate}
+                disableFuture
+                minDate={`${validYears[validYears.length - 1]}-01-01`}
+                getValue={this.handlePickerValue}
+              />
             )}
             <div>
               <button onClick={() => this.onClickButtons(CSV_TYPE.HEADERS)}>Headers CSV</button>
