@@ -42,10 +42,9 @@ const calculateMinMaxDate = (timePeriod, year, date = null) => {
   if (date) {
     minDate = new Date(date).toISOString();
     maxDate = new Date(new Date(date).setHours(23, 59, 59)).toISOString();
-  }
 
-  // Quarterly
-  else if (Object.keys(quarterlyMapping).includes(timePeriod)) {
+    // Quarterly
+  } else if (Object.keys(quarterlyMapping).includes(timePeriod)) {
     const { start, end } = quarterlyMapping[timePeriod];
     minDate = new Date(year, start).toISOString();
     maxDate = new Date(year, end, getLastDayOfMonth(year, end), 23, 59, 59).toISOString();
