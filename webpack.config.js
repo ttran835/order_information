@@ -18,7 +18,7 @@ module.exports = (isDevelopment) => {
   const currentPath = path.join(__dirname);
   const localDevEnv = currentPath + '/.env';
 
-  const productionEnv = { bigCommerceUrl: 'https://worker-test-centinela.herokuapp.com//api/v1/big-commerce' };
+  const productionEnv = { bigCommerceUrl: 'https://worker-test-centinela.herokuapp.com/api/v1/big-commerce' };
 
   let localEnvConfigs = dotenv.config({ path: localDevEnv }).parsed;
   localEnvConfigs = {
