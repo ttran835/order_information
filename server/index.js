@@ -11,13 +11,14 @@ const { router } = require('./routes');
 const Queue = require('bull');
 const throng = require('throng');
 
-let REDIS_URL = process.env.REDIS_URL || 'redis://127.0.0.1:6379';
+const REDIS_URL = process.env.REDIS_URL || 'redis://127.0.0.1:6379';
 const WORKERS = process.env.WEB_CONCURRENCY || 2;
 
-const app = express();
 // const db = require('./database');
 
 function start() {
+  const app = express();
+  const workQueue = new Queue('work', REDIS_URL);
   const whitelist = [
     'https://localhost:8080',
     'http://localhost:8080',
