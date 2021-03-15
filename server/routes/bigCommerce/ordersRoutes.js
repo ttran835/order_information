@@ -9,7 +9,7 @@ OrdersRoutes.route('/csv/:csvType/time-period/:timePeriod/year/:year').get(bigCo
 OrdersRoutes.route('/csv/:csvType/date/:date').get(bigCommerceOrders.getCsvs);
 
 OrdersRoutes.route('/post-job').post(bigCommerceOrders.postJob);
-OrdersRoutes.route('/get-job/:id').get(bigCommerceOrders.getJobStatus);
+OrdersRoutes.route('/get-jobs').get(bigCommerceOrders.getJobStatus);
 
 module.exports = { OrdersRoutes };
 

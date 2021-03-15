@@ -6,6 +6,7 @@ const BluebirdPromise = require('bluebird');
 const { parseAsync } = require('json2csv');
 const Queue = require('bull');
 
+const globalOrder = require('../globalOrder');
 const { calculateMinMaxDate } = require('../helpers');
 const { headers, details } = require('../jsonObjects');
 
@@ -291,20 +292,24 @@ const bigCommerceOrders = {
   postJob: async (req, res) => {
     try {
       const job = await workQueue.add({ type: 'csv' });
-      res.status(200).send(job.id);
+      res.status(200).send({ id: job.id });
     } catch (err) {
       console.log('Error in post Job');
+      console.error(err);
       res.sendStatus(400);
     }
   },
 
   getJobStatus: async (req, res) => {
     try {
-      const id = req.params.id;
-      const job = await workQueue.getJob(id);
-
-      const count = await workQueue.getActiveCount();
-
+      // const id = req.params.id;
+      const completedeJobs = await workQueue.getCompleted();
+      completedeJobs.sort((a, b) => a.finishedOn - b.finishedOn);
+      completedeJobs.map(({ id, _progress }) => {
+        return { id, progress: _progress };
+      });
+      // const count = await workQueue.getActiveCount();
+      return res.status(200).send(completedeJobs);
       if (job === null) {
         res.status(404).end();
       } else {

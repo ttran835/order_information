@@ -8,4 +8,5 @@ module.exports = () =>
     console.log({ jobId });
     console.log({ result });
     console.log('pending result from orders: ' + result);
+    return result;
   });
