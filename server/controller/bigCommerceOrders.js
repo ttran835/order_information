@@ -4,16 +4,18 @@ const chalk = require('chalk');
 const Axios = require('axios');
 const BluebirdPromise = require('bluebird');
 const { parseAsync } = require('json2csv');
+const Queue = require('bull');
 
 const { calculateMinMaxDate } = require('../helpers');
 const { headers, details } = require('../jsonObjects');
 
 const { CSV_TYPE } = require('../../shared/fetchConstants');
+const REDIS_URL = process.env.REDIS_URL || 'redis://127.0.0.1:6379';
+
+const workQueue = new Queue('orders', REDIS_URL);
 
 const bcUrlV2 = process.env.BC_API_PATH_V2;
 const bcUrlV3 = process.env.BC_API_PATH_V3;
-
-console.log(process.env.BC_ACCESS_TOKEN);
 
 const optionsHeader = {
   async: true,
@@ -155,6 +157,7 @@ const bigCommerceOrders = {
    * Sends back csv for either header or detail for specific time periods
    */
   getCsvs: async (req, res) => {
+    // await test();
     try {
       // Put 30 minutes since details for annually takes forever cause of rate-limiting
       req.setTimeout(1800000);
@@ -282,6 +285,39 @@ const bigCommerceOrders = {
     } catch (error) {
       console.log(error);
       res.status(400).send(error);
+    }
+  },
+
+  postJob: async (req, res) => {
+    try {
+      const job = await workQueue.add({ type: 'csv' });
+      res.status(200).send(job.id);
+    } catch (err) {
+      console.log('Error in post Job');
+      res.sendStatus(400);
+    }
+  },
+
+  getJobStatus: async (req, res) => {
+    try {
+      const id = req.params.id;
+      const job = await workQueue.getJob(id);
+
+      const count = await workQueue.getActiveCount();
+
+      if (job === null) {
+        res.status(404).end();
+      } else {
+        const state = await job.getState();
+        const progress = job._progress;
+        const value = job.returnvalue;
+        console.log({ value });
+        const reason = job.failedReason;
+        res.status(200).send({ id, state, progress, reason, value });
+      }
+    } catch (err) {
+      console.log(err);
+      res.sendStatus(400);
     }
   },
 };

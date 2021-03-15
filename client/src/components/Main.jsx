@@ -101,8 +101,8 @@ class Main extends React.Component {
           frequencyType === FREQUENCY_TYPE.DAILY
             ? `${this.capitalize(csvType)}_${new Date(dailyDate).toLocaleDateString()}.csv`
             : `${this.capitalize(csvType)}_${timePeriod}_${chosenYear}.csv`;
-
-        fileDownload(data, fileName);
+        console.log({ data });
+        // fileDownload(data, fileName);
       }
     } catch (error) {
       this.setState({

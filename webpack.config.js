@@ -219,7 +219,7 @@ module.exports = (isDevelopment) => {
     resolve: {
       alias: {
         Utils: path.resolve(__dirname, 'client/src/utils'),
-        Comps: path.resolve(__dirname, 'client/src/Components'),
+        Comps: path.resolve(__dirname, 'client/src/components'),
       },
       extensions: ['.jsx', '.js'],
     },

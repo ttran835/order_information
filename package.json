@@ -4,11 +4,12 @@
   "description": "Order information",
   "main": "index.js",
   "scripts": {
-    "start": "node server/index.js",
+    "start": "node server/index.js & npm run worker",
     "build": "webpack -w --config webpack.dev.js",
     "nodemon": "nodemon server/index.js",
+    "worker": "nodemon server/orderWorker.js",
     "start:dev": "nodemon server/index.js & webpack-dev-server --config webpack.dev.js",
-    "start:dev:debug": "nodemon --verbose --inspect server/index.js & webpack-dev-server --config webpack.dev.js",
+    "start:dev:debug": "nodemon --verbose --inspect server/index.js & npm run worker & webpack-dev-server --config webpack.dev.js",
     "heroku-prebuild": "npm install && npm install --dev",
     "heroku-postbuild": "webpack --config webpack.prod.js --source-map"
   },
