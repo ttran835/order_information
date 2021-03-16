@@ -9,6 +9,7 @@ function Workers() {
   const [error, setError] = useState(false);
   const [errMsg, setErrMsg] = useState('');
   const [jobs, setJobs] = useState([]);
+  const [jobId, setJobId] = useState('');
 
   const getJobs = async () => {
     try {
@@ -23,28 +24,10 @@ function Workers() {
     }
   };
 
-  // const updateJobs = async () => {
-  //   try {
-  //     const { data } = await Axios.get(getUrl);
-  //     console.log({ jobs });
-  //     const previousJobs = jobs.filter(({ id }) => {
-  //       console.log({ id });
-  //     });
-  //     console.log({ previousJobs });
-  //     return;
-  //     const updatedJobs = [...jobs, previousJobs];
-  //     setJobs(updatedJobs);
-  //   } catch (err) {
-  //     console.error(err);
-  //     setError(true);
-  //     setErrMsg(err.response.data.message);
-  //   }
-  // };
-
   useEffect(() => {
     (async () => getJobs())();
-    const interval = setInterval(() => getJobs(), 10000);
-    return () => clearInterval(interval);
+    // const interval = setInterval(() => getJobs(), 10000);
+    // return () => clearInterval(interval);
   }, []);
 
   const sendRequest = async () => {

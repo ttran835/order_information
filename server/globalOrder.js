@@ -1,12 +1,10 @@
 const Queue = require('bull');
-const shareConsts = require('./const');
+const { shared } = require('../shared');
 
-const workQueue = new Queue('orders', shareConsts.REDIS_URL);
+const workQueue = new Queue('orders', shared.consts.urls.REDIS_URL);
 
 module.exports = () =>
   workQueue.on('global:completed', (jobId, result) => {
-    console.log({ jobId });
-    console.log({ result });
-    console.log('pending result from orders: ' + result);
-    return result;
+    console.log('job completed with Id: ' + jobId);
+    // console.log('pending result from orders: ' + result);
   });

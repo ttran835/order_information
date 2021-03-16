@@ -6,6 +6,7 @@ import fileDownload from 'js-file-download';
 import urls from '../_requests/urls';
 
 import { CSV_TYPE, TIME_PERIOD } from '../../../shared/fetchConstants';
+import Axios from 'axios';
 
 const FREQUENCY_TYPE = {
   DAILY: 'Daily',
@@ -49,6 +50,7 @@ class Main extends React.Component {
       loading: true,
       downloading: false,
       errorMessage: '',
+      jobId: '',
     };
   }
 
@@ -102,8 +104,29 @@ class Main extends React.Component {
             ? `${this.capitalize(csvType)}_${new Date(dailyDate).toLocaleDateString()}.csv`
             : `${this.capitalize(csvType)}_${timePeriod}_${chosenYear}.csv`;
         console.log({ data });
+        this.setState({ jobId: data.id });
         // fileDownload(data, fileName);
       }
+    } catch (error) {
+      this.setState({
+        errorMessage:
+          error.response.data.message ||
+          'Something went wrong in the download process. Please try again or check your server',
+      });
+    } finally {
+      this.setState({ downloading: false });
+    }
+  };
+
+  getFinishJobData = async () => {
+    try {
+      const { data } = await Axios.get(
+        `https://worker-test-centinela.herokuapp.com/api/v1/big-commerce/orders/get-jobs/${this.state.jobId}`,
+      );
+
+      const fileName = 'header.csv';
+      fileDownload(data, fileName);
+      console.log({ data });
     } catch (error) {
       this.setState({
         errorMessage:
@@ -219,6 +242,7 @@ class Main extends React.Component {
             <div>
               <button onClick={() => this.onClickButtons(CSV_TYPE.HEADERS)}>Headers CSV</button>
               <button onClick={() => this.onClickButtons(CSV_TYPE.DETAILS)}>Details CSV</button>
+              <button onClick={() => this.getFinishJobData()}>Get Data</button>
             </div>
           </>
         )}

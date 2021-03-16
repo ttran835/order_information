@@ -6,11 +6,10 @@ const BluebirdPromise = require('bluebird');
 const { parseAsync } = require('json2csv');
 const Queue = require('bull');
 
-const globalOrder = require('../globalOrder');
 const { calculateMinMaxDate } = require('../helpers');
 const { headers, details } = require('../jsonObjects');
-
 const { CSV_TYPE } = require('../../shared/fetchConstants');
+
 const REDIS_URL = process.env.REDIS_URL || 'redis://127.0.0.1:6379';
 
 const workQueue = new Queue('orders', REDIS_URL);
@@ -158,11 +157,7 @@ const bigCommerceOrders = {
    * Sends back csv for either header or detail for specific time periods
    */
   getCsvs: async (req, res) => {
-    // await test();
     try {
-      // Put 30 minutes since details for annually takes forever cause of rate-limiting
-      req.setTimeout(1800000);
-
       // Date param is specifically for daily option and comes from a diff endpoint
       const { csvType, timePeriod, year, date } = req.params;
 
@@ -291,8 +286,15 @@ const bigCommerceOrders = {
 
   postJob: async (req, res) => {
     try {
-      const job = await workQueue.add({ type: 'csv' });
-      res.status(200).send({ id: job.id });
+      console.log(req.params);
+
+      const { csvType, timePeriod, year, date } = req.params;
+      const { minDate, maxDate } = calculateMinMaxDate(timePeriod, year, date);
+
+      if (csvType === CSV_TYPE.HEADERS) {
+        const job = await workQueue.add({ type: 'getAllOrders', minDate, maxDate });
+        res.status(200).send({ id: job.id });
+      }
     } catch (err) {
       console.log('Error in post Job');
       console.error(err);
@@ -302,24 +304,22 @@ const bigCommerceOrders = {
 
   getJobStatus: async (req, res) => {
     try {
-      // const id = req.params.id;
-      const completedeJobs = await workQueue.getCompleted();
-      completedeJobs.sort((a, b) => a.finishedOn - b.finishedOn);
-      completedeJobs.map(({ id, _progress }) => {
-        return { id, progress: _progress };
-      });
+      const id = req.params.id;
+      // const completedeJobs = await workQueue.getCompleted();
+      const job = await workQueue.getJob(id);
+      console.log(await job.getState());
+      // console.log(job.returnvalue);
+      // completedeJobs.sort((a, b) => a.finishedOn - b.finishedOn);
+      // completedeJobs.map(({ id, _progress }) => {
+      //   return { id, progress: _progress };
+      // });
       // const count = await workQueue.getActiveCount();
-      return res.status(200).send(completedeJobs);
-      if (job === null) {
-        res.status(404).end();
-      } else {
-        const state = await job.getState();
-        const progress = job._progress;
-        const value = job.returnvalue;
-        console.log({ value });
-        const reason = job.failedReason;
-        res.status(200).send({ id, state, progress, reason, value });
-      }
+      const csv = job.returnvalue;
+
+      // Send back csv
+      res.attachment('details.csv');
+      return res.status(200).send(csv);
+      // return res.status(200).send(completedeJobs);
     } catch (err) {
       console.log(err);
       res.sendStatus(400);
