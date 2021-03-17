@@ -7,6 +7,7 @@ const { parseAsync } = require('json2csv');
 const Queue = require('bull');
 
 const { calculateMinMaxDate } = require('../helpers');
+const { shared } = require('../../shared');
 const { headers, details } = require('../jsonObjects');
 const { CSV_TYPE } = require('../../shared/fetchConstants');
 
@@ -292,13 +293,26 @@ const bigCommerceOrders = {
       const { minDate, maxDate } = calculateMinMaxDate(timePeriod, year, date);
 
       if (csvType === CSV_TYPE.HEADERS) {
-        const job = await workQueue.add({ type: 'getAllOrders', minDate, maxDate });
+        const job = await workQueue.add({
+          type: shared.consts.workerTypes.orders.HEADERS,
+          minDate,
+          maxDate,
+        });
+        res.status(200).send({ id: job.id });
+      }
+
+      if (csvType === CSV_TYPE.DETAILS) {
+        const job = await await workQueue.add({
+          type: shared.consts.workerTypes.orders.DETAILS,
+          minDate,
+          maxDate,
+        });
         res.status(200).send({ id: job.id });
       }
     } catch (err) {
       console.log('Error in post Job');
       console.error(err);
-      res.sendStatus(400);
+      res.status(400).send(err);
     }
   },
 

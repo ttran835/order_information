@@ -2,6 +2,9 @@ require('dotenv').config();
 const throng = require('throng');
 const Queue = require('bull');
 const Axios = require('axios');
+const { parseAsync } = require('json2csv');
+const { headers, details } = require('./jsonObjects');
+
 const { shared } = require('../shared');
 const { orderMethods } = require('./controller/ordersMethods');
 
@@ -38,17 +41,30 @@ async function doWork(job, count) {
 function start() {
   // Connect to the named work queue
   const workQueue = new Queue('orders', shared.consts.urls.REDIS_URL);
-
   workQueue.process(maxJobsPerWorker, async (job) => {
-    console.log(job.data);
-    if (job.data.type === 'csv') {
-      return doWork(job, 1000);
-    }
+    try {
+      const { minDate, maxDate, type } = job.data || {};
 
-    console.log(job.data);
-    if (job.data.type === shared.consts.workerTypes.orders.GET_ALL_ORDERS) {
-      const { minDate, maxDate } = job.data;
-      return orderMethods.createCsvHeader(minDate, maxDate);
+      if (type === 'csv') {
+        return doWork(job, 1000);
+      }
+
+      if (job.data.type === shared.consts.workerTypes.orders.HEADERS) {
+        const allOrders = await orderMethods.createCsvHeader(minDate, maxDate);
+        const allOrdersJsonFormatted = allOrders.map((order) => headers(order));
+        const csv = await parseAsync(allOrdersJsonFormatted);
+        return csv;
+      }
+
+      if (job.data.type === shared.consts.workerTypes.orders.DETAILS) {
+        const allDetails = await orderMethods.createCsvDetails(minDate, maxDate); 
+        const allDetailsJsonFormatted = allDetails.map((detail) => details(detail));
+        const csv = await parseAsync(allDetailsJsonFormatted);
+        return csv;
+      }
+    } catch (error) {
+      console.error(error);
+      throw error;
     }
   });
 }

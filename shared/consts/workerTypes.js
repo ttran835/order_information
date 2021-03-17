@@ -1,6 +1,7 @@
 const orders = {
   ORDERS: 'orders',
-  CSV: 'csv',
+  DETAILS: 'details',
+  HEADERS: 'headers',
   GET_ALL_ORDERS: 'getAllOrders',
 };
 
