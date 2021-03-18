@@ -263,12 +263,11 @@ const bigCommerceOrders = {
               );
               const refundDate = itemIdToCreatedMapping[detail.id].created;
               const totalRefunded = itemIdToCreatedMapping[detail.id].total_amount;
-              detail.total_inc_tax = totalRefunded;
-              // Get copy after getting the total refund but before changing date
               const originalDetail = cloneDeep(detail);
               // Janky way of telling apart original and refunded but oh well
               originalDetail.original = true;
               originalCreatedDateForRefundedDetails.push(originalDetail);
+              detail.total_inc_tax = totalRefunded;
               detail.date_created = refundDate;
               detail.date_shipped = refundDate;
             }
