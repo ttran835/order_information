@@ -19,6 +19,8 @@ const details = (orderProduct) => {
     total_inc_tax,
     total_tax,
     applied_discounts,
+    // Self tacked on property to tell difference between original and refunded
+    original,
   } = orderProduct;
 
   // Convert dates to local time from and RFC2822
@@ -30,10 +32,15 @@ const details = (orderProduct) => {
     return acc;
   }, 0);
 
-  const totalExTaxWithDiscount = +total_ex_tax - discount;
-  // If refunded, the total_inc_tax is already accounted for from the refund orders
+  // Actual refund line items
+  const refundLineItem = is_refunded && !original;
+
+  const totalExTaxWithDiscount = refundLineItem
+    ? +total_inc_tax - +total_tax
+    : +total_ex_tax - discount;
+  // If refunded AND not original, the total_inc_tax is already accounted for from the refund orders
   // api in the controller
-  const totalIncTaxWithDiscount = is_refunded
+  const totalIncTaxWithDiscount = refundLineItem
     ? total_inc_tax
     : +totalExTaxWithDiscount + +total_tax;
 
@@ -51,10 +58,10 @@ const details = (orderProduct) => {
     quantity,
     quantity_refunded,
     sku,
-    total_ex_tax: is_refunded ? totalExTaxWithDiscount * -1 : totalExTaxWithDiscount,
-    total_inc_tax: is_refunded ? totalIncTaxWithDiscount * -1 : totalIncTaxWithDiscount,
-    total_tax: is_refunded ? total_tax * -1 : total_tax,
-    discount: is_refunded ? discount * -1 : discount,
+    total_ex_tax: refundLineItem ? totalExTaxWithDiscount * -1 : totalExTaxWithDiscount,
+    total_inc_tax: refundLineItem ? totalIncTaxWithDiscount * -1 : totalIncTaxWithDiscount,
+    total_tax: refundLineItem ? total_tax * -1 : total_tax,
+    discount: refundLineItem ? discount * -1 : discount,
   };
 };
 
