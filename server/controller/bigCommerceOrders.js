@@ -14,8 +14,6 @@ const { CSV_TYPE } = require('../../shared/fetchConstants');
 const bcUrlV2 = process.env.BC_API_PATH_V2;
 const bcUrlV3 = process.env.BC_API_PATH_V3;
 
-console.log(process.env.BC_ACCESS_TOKEN);
-
 const optionsHeader = {
   async: true,
   crossDomain: true,
@@ -241,6 +239,7 @@ const bigCommerceOrders = {
       // Check for refunds in the details
       const originalCreatedDateForRefundedDetails = [];
       await BluebirdPromise.map(allDetails, async (detail) => {
+        console.log({ detail });
         let refundRequestWentThrough = false;
         // Rate limit :(
         while (!refundRequestWentThrough) {
