@@ -200,7 +200,7 @@ const bigCommerceOrders = {
       console.time('getAllDetails');
       await BluebirdPromise.map(
         allOrders,
-        async ({ id, date_created, date_shipped }) => {
+        async ({ id, date_created, date_shipped, date_modified }) => {
           let requestWentThrough = false;
           let detailsNotLastPage = true;
           let detailsPage = 1;
@@ -213,7 +213,11 @@ const bigCommerceOrders = {
               const currentDetails = await getOrderProductsFunc(id, detailsPage);
               if (currentDetails) {
                 allDetails.push(
-                  ...currentDetails.map((detail) => ({ ...detail, date_created, date_shipped })),
+                  ...currentDetails.map((detail) => ({
+                    ...detail,
+                    date_created,
+                    date_shipped: date_shipped || date_modified,
+                  })),
                 );
                 // Only go on to next page if there are at least 250 results which
                 // is the limit
