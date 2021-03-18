@@ -31,7 +31,9 @@ const details = (orderProduct) => {
   }, 0);
 
   const totalExTaxWithDiscount = total_ex_tax - discount;
-  const totalIncTaxWithDiscount = total_inc_tax - discount;
+  // If refunded, the total_inc_tax is already accounted for from the refund orders
+  // api in the controller
+  const totalIncTaxWithDiscount = is_refunded ? total_inc_tax : totalExTaxWithDiscount + total_tax;
 
   return {
     invoice_number,
