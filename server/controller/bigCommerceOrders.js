@@ -109,8 +109,6 @@ const bigCommerceOrders = {
     try {
       const { orderId } = req.params;
       const { page } = req.query;
-      const asda = await getRefundDetails(orderId);
-      debugger;
       const data = await getOrderProductsFunc(orderId, page || 1);
       if (!data) res.sendStatus(400);
       res.status(200).send(data);
