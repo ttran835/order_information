@@ -2,6 +2,7 @@
 require('dotenv').config();
 const chalk = require('chalk');
 const Axios = require('axios');
+const { cloneDeep } = require('lodash');
 const BluebirdPromise = require('bluebird');
 const { parseAsync } = require('json2csv');
 const Queue = require('bull');
@@ -201,7 +202,7 @@ const bigCommerceOrders = {
       console.time('getAllDetails');
       await BluebirdPromise.map(
         allOrders,
-        async ({ id, date_created, date_shipped }) => {
+        async ({ id, date_created, date_shipped, date_modified }) => {
           let requestWentThrough = false;
           let detailsNotLastPage = true;
           let detailsPage = 1;
@@ -214,7 +215,11 @@ const bigCommerceOrders = {
               const currentDetails = await getOrderProductsFunc(id, detailsPage);
               if (currentDetails) {
                 allDetails.push(
-                  ...currentDetails.map((detail) => ({ ...detail, date_created, date_shipped })),
+                  ...currentDetails.map((detail) => ({
+                    ...detail,
+                    date_created,
+                    date_shipped: date_shipped || date_modified,
+                  })),
                 );
                 // Only go on to next page if there are at least 250 results which
                 // is the limit
@@ -238,6 +243,7 @@ const bigCommerceOrders = {
       );
 
       // Check for refunds in the details
+      const originalCreatedDateForRefundedDetails = [];
       await BluebirdPromise.map(allDetails, async (detail) => {
         let refundRequestWentThrough = false;
         // Rate limit :(
@@ -248,13 +254,22 @@ const bigCommerceOrders = {
               const refundArray = await getRefundDetails(detail.order_id);
               // In case of multiple refunds, find the correct one by
               // matching up the item id
-              const itemIdToCreatedMapping = refundArray.reduce((acc, { created, items }) => {
-                items.forEach(({ item_id }) => {
-                  acc[item_id] = created;
-                });
-                return acc;
-              }, {});
-              const refundDate = itemIdToCreatedMapping[detail.id];
+              const itemIdToCreatedMapping = refundArray.reduce(
+                (acc, { created, items, total_amount }) => {
+                  items.forEach(({ item_id }) => {
+                    acc[item_id] = { created, total_amount };
+                  });
+                  return acc;
+                },
+                {},
+              );
+              const refundDate = itemIdToCreatedMapping[detail.id].created;
+              const totalRefunded = itemIdToCreatedMapping[detail.id].total_amount;
+              const originalDetail = cloneDeep(detail);
+              // Janky way of telling apart original and refunded but oh well
+              originalDetail.original = true;
+              originalCreatedDateForRefundedDetails.push(originalDetail);
+              detail.total_inc_tax = totalRefunded;
               detail.date_created = refundDate;
               detail.date_shipped = refundDate;
             }
@@ -268,7 +283,7 @@ const bigCommerceOrders = {
       console.timeEnd('getAllDetails');
 
       // Sort by date
-      const sortedAllDetails = allDetails.sort(
+      const sortedAllDetails = [...allDetails, ...originalCreatedDateForRefundedDetails].sort(
         (a, b) => new Date(b.date_created) - new Date(a.date_created),
       );
 
