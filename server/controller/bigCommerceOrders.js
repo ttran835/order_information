@@ -200,7 +200,7 @@ const bigCommerceOrders = {
       console.time('getAllDetails');
       await BluebirdPromise.map(
         allOrders,
-        async ({ id, date_created, date_shipped, date_modified }) => {
+        async ({ id, date_created, date_shipped, date_modified, shipping_cost_inc_tax }) => {
           let requestWentThrough = false;
           let detailsNotLastPage = true;
           let detailsPage = 1;
