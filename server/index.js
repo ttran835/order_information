@@ -8,10 +8,11 @@ const helmet = require('helmet');
 const chalk = require('chalk');
 const bodyParser = require('body-parser');
 const { router } = require('./routes');
+const globalOrder = require('./globalOrder');
 
-const app = express();
 // const db = require('./database');
 
+const app = express();
 const whitelist = [
   'https://localhost:8080',
   'http://localhost:8080',
@@ -77,3 +78,11 @@ app.listen(port, () => {
   console.log(`Port is ${port}`);
   whitelist.forEach((url) => console.log(chalk.yellow(`Whitelisted url: ${url}`)));
 });
+
+// Tracking when job is completed
+globalOrder();
+// throng({
+//   workers: WORKERS,
+//   lifetime: Infinity,
+//   start,
+// });

@@ -5,11 +5,16 @@ const Axios = require('axios');
 const { cloneDeep } = require('lodash');
 const BluebirdPromise = require('bluebird');
 const { parseAsync } = require('json2csv');
+const Queue = require('bull');
 
 const { calculateMinMaxDate } = require('../helpers');
+const { shared } = require('../../shared');
 const { headers, details } = require('../jsonObjects');
-
 const { CSV_TYPE } = require('../../shared/fetchConstants');
+
+const REDIS_URL = process.env.REDIS_URL || 'redis://127.0.0.1:6379';
+
+const workQueue = new Queue('orders', REDIS_URL);
 
 const bcUrlV2 = process.env.BC_API_PATH_V2;
 const bcUrlV3 = process.env.BC_API_PATH_V3;
@@ -155,9 +160,6 @@ const bigCommerceOrders = {
    */
   getCsvs: async (req, res) => {
     try {
-      // Put 30 minutes since details for annually takes forever cause of rate-limiting
-      req.setTimeout(1800000);
-
       // Date param is specifically for daily option and comes from a diff endpoint
       const { csvType, timePeriod, year, date } = req.params;
 
@@ -296,6 +298,61 @@ const bigCommerceOrders = {
     } catch (error) {
       console.log(error);
       res.status(400).send(error);
+    }
+  },
+
+  postJob: async (req, res) => {
+    try {
+      console.log(req.params);
+
+      const { csvType, timePeriod, year, date } = req.params;
+      const { minDate, maxDate } = calculateMinMaxDate(timePeriod, year, date);
+
+      if (csvType === CSV_TYPE.HEADERS) {
+        const job = await workQueue.add({
+          type: shared.consts.workerTypes.orders.HEADERS,
+          minDate,
+          maxDate,
+        });
+        res.status(200).send({ id: job.id });
+      }
+
+      if (csvType === CSV_TYPE.DETAILS) {
+        const job = await await workQueue.add({
+          type: shared.consts.workerTypes.orders.DETAILS,
+          minDate,
+          maxDate,
+        });
+        res.status(200).send({ id: job.id });
+      }
+    } catch (err) {
+      console.log('Error in post Job');
+      console.error(err);
+      res.status(400).send(err);
+    }
+  },
+
+  getJobStatus: async (req, res) => {
+    try {
+      const id = req.params.id;
+      // const completedeJobs = await workQueue.getCompleted();
+      const job = await workQueue.getJob(id);
+      console.log(await job.getState());
+      // console.log(job.returnvalue);
+      // completedeJobs.sort((a, b) => a.finishedOn - b.finishedOn);
+      // completedeJobs.map(({ id, _progress }) => {
+      //   return { id, progress: _progress };
+      // });
+      // const count = await workQueue.getActiveCount();
+      const csv = job.returnvalue;
+
+      // Send back csv
+      res.attachment('details.csv');
+      return res.status(200).send(csv);
+      // return res.status(200).send(completedeJobs);
+    } catch (err) {
+      console.log(err);
+      res.sendStatus(400);
     }
   },
 };

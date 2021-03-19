@@ -35,11 +35,12 @@ const details = (orderProduct) => {
   // Actual refund line items
   const refundLineItem = is_refunded && !original;
 
+  // If refunded AND not original, the total_inc_tax is already accounted for from the refund orders
+  // api in the controller
   const totalExTaxWithDiscount = refundLineItem
     ? +total_inc_tax - +total_tax
     : +total_ex_tax - discount;
-  // If refunded AND not original, the total_inc_tax is already accounted for from the refund orders
-  // api in the controller
+
   const totalIncTaxWithDiscount = refundLineItem
     ? total_inc_tax
     : +totalExTaxWithDiscount + +total_tax;
