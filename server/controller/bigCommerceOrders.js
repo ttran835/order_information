@@ -202,7 +202,7 @@ const bigCommerceOrders = {
       console.time('getAllDetails');
       await BluebirdPromise.map(
         allOrders,
-        async ({ id, date_created, date_shipped, date_modified }) => {
+        async ({ id, date_created, date_shipped, date_modified, shipping_cost_inc_tax }) => {
           let requestWentThrough = false;
           let detailsNotLastPage = true;
           let detailsPage = 1;
@@ -245,6 +245,7 @@ const bigCommerceOrders = {
       // Check for refunds in the details
       const originalCreatedDateForRefundedDetails = [];
       await BluebirdPromise.map(allDetails, async (detail) => {
+        console.log({ detail });
         let refundRequestWentThrough = false;
         // Rate limit :(
         while (!refundRequestWentThrough) {
