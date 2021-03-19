@@ -18,10 +18,13 @@ module.exports = (isDevelopment) => {
   const currentPath = path.join(__dirname);
   const localDevEnv = currentPath + '/.env';
 
-  const productionEnv = {};
+  const productionEnv = { bigCommerceUrl: 'https://worker-test-centinela.herokuapp.com/api/v1/big-commerce' };
 
   let localEnvConfigs = dotenv.config({ path: localDevEnv }).parsed;
-  localEnvConfigs = { ...localEnvConfigs, bigCommerceUrl: 'http://localhost:3000/api/v1/big-commerce' };
+  localEnvConfigs = {
+    ...localEnvConfigs,
+    bigCommerceUrl: 'http://localhost:3000/api/v1/big-commerce',
+  };
 
   const fileEnv = !isDevelopment ? productionEnv : localEnvConfigs;
 
@@ -216,7 +219,7 @@ module.exports = (isDevelopment) => {
     resolve: {
       alias: {
         Utils: path.resolve(__dirname, 'client/src/utils'),
-        Comps: path.resolve(__dirname, 'client/src/Components'),
+        Comps: path.resolve(__dirname, 'client/src/components'),
       },
       extensions: ['.jsx', '.js'],
     },
