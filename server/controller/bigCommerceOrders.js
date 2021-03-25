@@ -6,7 +6,7 @@ const { cloneDeep } = require('lodash');
 const BluebirdPromise = require('bluebird');
 const { parseAsync } = require('json2csv');
 
-const { calculateMinMaxDate } = require('../helpers');
+const { calculateMinMaxDate, createShippingItemLineItem } = require('../helpers');
 const { headers, details } = require('../jsonObjects');
 
 const { CSV_TYPE } = require('../../shared/fetchConstants');
@@ -109,7 +109,9 @@ const bigCommerceOrders = {
     try {
       const { orderId } = req.params;
       const { page } = req.query;
+      // const refund = await getRefundDetails(orderId);
       const data = await getOrderProductsFunc(orderId, page || 1);
+      debugger;
       if (!data) res.sendStatus(400);
       res.status(200).send(data);
     } catch (error) {
@@ -242,6 +244,10 @@ const bigCommerceOrders = {
 
       // Check for refunds in the details
       const originalCreatedDateForRefundedDetails = [];
+      const shippingItems = [];
+      // Prevent duplicate itemIdToCreatedMapping maps by putting it
+      // in a map with order_id
+      const orderIdToItemInfoMapping = {};
       await BluebirdPromise.map(allDetails, async (detail) => {
         let refundRequestWentThrough = false;
         // Rate limit :(
@@ -250,24 +256,63 @@ const bigCommerceOrders = {
             // Get refund date from another request if refunded
             if (detail.is_refunded) {
               const refundArray = await getRefundDetails(detail.order_id);
-              // In case of multiple refunds, find the correct one by
-              // matching up the item id
-              const itemIdToCreatedMapping = refundArray.reduce(
-                (acc, { created, items, total_amount }) => {
-                  items.forEach(({ item_id }) => {
-                    acc[item_id] = { created, total_amount };
-                  });
-                  return acc;
-                },
-                {},
-              );
+
+              if (!orderIdToItemInfoMapping[detail.order_id]) {
+                // In case of multiple refunds, find the correct one by
+                // matching up the item id AND check for partial/full cancellations
+                let partialCancellation = true;
+                orderIdToItemInfoMapping[detail.order_id] = refundArray.reduce(
+                  (acc, { created, items, total_amount }) => {
+                    // If more than one item in this refund object, full cancellation
+                    if (items.length > 1) partialCancellation = false;
+                    items.forEach(({ item_id, item_type, requested_amount }) => {
+                      // First check if its SHIPPING type
+                      if (item_type === 'SHIPPING') {
+                        const { order_id, date_created, date_shipped } = detail;
+                        // Original
+                        shippingItems.push(
+                          createShippingItemLineItem({
+                            order_id,
+                            date_created,
+                            date_shipped,
+                            requested_amount,
+                          }),
+                        );
+                        // Refund
+                        shippingItems.push(
+                          createShippingItemLineItem({
+                            order_id,
+                            date_created: created,
+                            date_shipped: created,
+                            requested_amount: +requested_amount * -1,
+                          }),
+                        );
+                      } else {
+                        acc[item_id] = { created, total_amount, partialCancellation };
+                      }
+                    });
+                    return acc;
+                  },
+                  {},
+                );
+              }
+              const itemIdToCreatedMapping = orderIdToItemInfoMapping[detail.order_id];
               const refundDate = itemIdToCreatedMapping[detail.id].created;
               const totalRefunded = itemIdToCreatedMapping[detail.id].total_amount;
+
               const originalDetail = cloneDeep(detail);
+
               // Janky way of telling apart original and refunded but oh well
               originalDetail.original = true;
               originalCreatedDateForRefundedDetails.push(originalDetail);
-              detail.total_inc_tax = totalRefunded;
+
+              // Use total amount only for partial cancellations
+              const partialCancellation = itemIdToCreatedMapping[detail.id].partialCancellation;
+              if (partialCancellation) {
+                detail.total_inc_tax = totalRefunded;
+              }
+              // JANKY
+              detail.partialCancellation = partialCancellation;
               detail.date_created = refundDate;
               detail.date_shipped = refundDate;
             }
@@ -281,9 +326,11 @@ const bigCommerceOrders = {
       console.timeEnd('getAllDetails');
 
       // Sort by date
-      const sortedAllDetails = [...allDetails, ...originalCreatedDateForRefundedDetails].sort(
-        (a, b) => new Date(b.date_created) - new Date(a.date_created),
-      );
+      const sortedAllDetails = [
+        ...allDetails,
+        ...originalCreatedDateForRefundedDetails,
+        ...shippingItems,
+      ].sort((a, b) => new Date(b.date_created) - new Date(a.date_created));
 
       // Format for details
       const allDetailsJsonFormatted = sortedAllDetails.map((detail) => details(detail));

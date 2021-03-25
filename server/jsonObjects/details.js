@@ -19,8 +19,9 @@ const details = (orderProduct) => {
     total_inc_tax,
     total_tax,
     applied_discounts,
-    // Self tacked on property to tell difference between original and refunded
+    // Self tacked on properties to tell difference between original and refunded and between partial and full cancellations
     original,
+    partialCancellation,
   } = orderProduct;
 
   // Convert dates to local time from and RFC2822
@@ -35,13 +36,13 @@ const details = (orderProduct) => {
   // Actual refund line items
   const refundLineItem = is_refunded && !original;
 
-  // If refunded AND not original, the total_inc_tax is already accounted for from the refund orders
-  // api in the controller
-  const totalExTaxWithDiscount = refundLineItem
+  // If refunded AND not original, the total_inc_tax is either a partial or
+  // full cancellation. If partial, total amount is already accounted for
+  const totalExTaxWithDiscount = partialCancellation && refundLineItem
     ? +total_inc_tax - +total_tax
     : +total_ex_tax - discount;
 
-  const totalIncTaxWithDiscount = refundLineItem
+  const totalIncTaxWithDiscount = partialCancellation && refundLineItem
     ? total_inc_tax
     : +totalExTaxWithDiscount + +total_tax;
 

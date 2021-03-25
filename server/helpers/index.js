@@ -64,4 +64,34 @@ const calculateMinMaxDate = (timePeriod, year, date = null) => {
   return { minDate, maxDate };
 };
 
-module.exports = { getLastDayOfMonth, convertToRFC2822, calculateMinMaxDate };
+const createShippingItemLineItem = ({
+  order_id,
+  date_created,
+  date_shipped,
+  requested_amount,
+}) => ({
+  order_id,
+  date_created,
+  date_shipped,
+  base_total: requested_amount,
+  id: '',
+  is_refunded: '',
+  name: 'SHIPPING',
+  price_ex_tax: requested_amount,
+  price_inc_tax: requested_amount,
+  price_tax: 0,
+  quantity: 1,
+  quantity_refunded: 0,
+  sku: '',
+  total_ex_tax: requested_amount,
+  total_inc_tax: requested_amount,
+  total_tax: 0,
+  applied_discounts: [],
+});
+
+module.exports = {
+  getLastDayOfMonth,
+  convertToRFC2822,
+  calculateMinMaxDate,
+  createShippingItemLineItem,
+};
